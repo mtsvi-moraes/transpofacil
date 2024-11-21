@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException
+from ..services.olhovivo_service import OlhoVivoService
 from ..services import item_service, genai_service
 from ..models.item_model import Item
 from ..schemas.input_text import InputText
 
 router = APIRouter()
+olho_vivo_service = OlhoVivoService()
 
 
 
@@ -15,6 +17,10 @@ def read_item(item_id: int):
     return item
 
 @router.post("/generate-response/")
-def generate_response(input_text: InputText):
-    response = genai_service.get_response(input_text.input_text)
-    return {"response": response}
+def generate_response(termos_busca: str = "Jurubatuba"):
+    try:
+        linhas = olho_vivo_service.buscar_linhas(termos_busca=termos_busca)
+        response = olho_vivo_service.gerar_resposta(linhas)
+        return {"response": response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
